@@ -30,6 +30,6 @@ export const addRow = obj => {
 }
 
 export let tableFooter = `
-<button id="nextPage" ><</button>
-<button id="prevPage" >></button>
+<button id="prevPage" ><</button>
+<button id="nextPage" >></button>
 `

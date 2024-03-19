@@ -1,48 +1,75 @@
-import {$} from './uitls'
+import {$, setLoading, clean} from './uitls'
 import {table, addRow, tableFooter} from './templates/table.template'
 
 let $app = $('#app');
 let page = 1
-let baseUrl = 'http://ldap.dev.uneg.edu.ve';
-let usersUrl = `${baseUrl}/api/v1/users/?page=${page}`;
 
-const getData = async () => {
+const getUrl = (page) => {
+  let baseUrl = 'http://ldap.dev.uneg.edu.ve';
+  let usersUrl = `${baseUrl}/api/v1/users`;
+  let url = `${usersUrl}/?page=${page}`;
+  console.log(url);
+  return url;
+}
+
+const getData = async (url) => {
   try {
-    let res = await (await fetch(usersUrl)).json()
+    let res = await (await fetch(url)).json();
     if(res.status != 'ok'){
-      throw new Error("Error obtener data")
+      throw new Error("Error obtener data");
     }
-    return res
+    return res;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
 }
 
-const nextPage = () => {
-  p;
-
-}
-
-const generateTable = async () => {
-  let data = await getData()
-  $app.innerHTML = table
-  let $tableBody = $('#tableBody')
-  let $tableFooter = $('#tableFooter')
-  $tableFooter.innerHTML = tableFooter
-  $app.setAttribute("aria-busy", "false")
+const generateTableBody = async () => {
+  let $tableBody = $('#tableBody');
+  setLoading($tableBody);
+  let data = await getData(getUrl(page));
+  setLoading($tableBody, 'false');
   data.data.forEach(el => {
-    $tableBody.innerHTML += addRow(el)
+    $tableBody.innerHTML += addRow(el);
   });
 
-  $('#nextPage').addEventListener('click', () => {
-    page+=1;
-  })
-
-  $('#prevPage')
 }
 
+// const generateTable = async () => {
+const generateTable = () => {
+  clean($app);
+  // setLoading($app);
+  // let data = await getData(getUrl(page));
+  $app.innerHTML = table;
+  generateTableBody();
+  // let $tableBody = $('#tableBody');
+  let $tableFooter = $('#tableFooter');
+  $tableFooter.innerHTML = tableFooter;
+  // setLoading($app, 'false');
+  // data.data.forEach(el => {
+  //   $tableBody.innerHTML += addRow(el);
+  // });
 
+  $('#nextPage').addEventListener('click', () => {
+    if(page >= 200){
+      return
+    }
+    page+=1;
+    generateTable()
+  })
+
+  $('#prevPage').addEventListener('click', () => {
+    if(page <= 0){
+      return
+    }
+    page-=1;
+    generateTable()
+  })
+  console.log(page)
+}
+
+window.onload = generateTable()
 
 // $app.setAttribute("aria-busy", "true")
-generateTable()
+// generateTable()
 

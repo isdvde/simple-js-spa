@@ -11,7 +11,7 @@ export let table = `
       </thead>
     <tbody id="tableBody">
     </tbody>
-<tfoot id="tableFooter" class="grid">
+<tfoot id="tableFooter" class="">
 </tfoot>
   </table>
 </article>

@@ -5,10 +5,9 @@ let $app = $('#app');
 let page = 1
 
 const getUrl = (page) => {
-  let baseUrl = 'http://ldap.dev.uneg.edu.ve';
+  let baseUrl = 'http://10.25.100.150:9999';
   let usersUrl = `${baseUrl}/api/v1/users`;
   let url = `${usersUrl}/?page=${page}`;
-  console.log(url);
   return url;
 }
 
@@ -26,50 +25,49 @@ const getData = async (url) => {
 
 const generateTableBody = async () => {
   let $tableBody = $('#tableBody');
-  setLoading($tableBody);
   let data = await getData(getUrl(page));
-  setLoading($tableBody, 'false');
+	clean($tableBody)
   data.data.forEach(el => {
     $tableBody.innerHTML += addRow(el);
   });
-
 }
 
-// const generateTable = async () => {
-const generateTable = () => {
+const generateTable = async () => {
   clean($app);
-  // setLoading($app);
-  // let data = await getData(getUrl(page));
+  setLoading($app);
   $app.innerHTML = table;
-  generateTableBody();
-  // let $tableBody = $('#tableBody');
+	$('#card').style.display = 'none';
+  await generateTableBody();
+  setLoading($app, 'false');
   let $tableFooter = $('#tableFooter');
   $tableFooter.innerHTML = tableFooter;
-  // setLoading($app, 'false');
-  // data.data.forEach(el => {
-  //   $tableBody.innerHTML += addRow(el);
-  // });
+	$('#card').style.display = ''
 
-  $('#nextPage').addEventListener('click', () => {
+  $('#nextPage').addEventListener('click', async () => {
+		let np = $('#nextPage')
     if(page >= 200){
       return
     }
     page+=1;
-    generateTable()
+		np.innerHTML = ''
+		setLoading(np);
+    await generateTableBody();
+		setLoading(np, 'false');
+		np.innerHTML = '>'
   })
 
-  $('#prevPage').addEventListener('click', () => {
-    if(page <= 0){
+  $('#prevPage').addEventListener('click', async () => {
+		let pp = $('#prevPage')
+    if(page <= 1){
       return
     }
     page-=1;
-    generateTable()
+		pp.innerHTML = ''
+		setLoading(pp);
+    await generateTableBody();
+		setLoading(pp, 'false');
+		pp.innerHTML = '<'
   })
-  console.log(page)
 }
 
 window.onload = generateTable()
-
-// $app.setAttribute("aria-busy", "true")
-// generateTable()
-

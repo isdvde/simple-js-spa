@@ -3,17 +3,22 @@ import {$, setLoading, clean} from '../../uitls'
 
 let page = 1
 
-export const addRow = obj => {
-	return `
-<tr>
-<th scope="col">${obj.initials}</th>
-<td>${obj.uid}</td>
-<td>${obj.displayName}</td>
-<td>${obj.employeeNumber}</td>
-<td>${obj.employeeType}</td>
-<td>${obj.businessCategory}</td>
-</tr>
-`
+const getTemplate = async (selector) => {
+  let text = await fetch('/templates/table/table.html')
+    .then(res => res.text())
+    .then(text => text)
+
+  let template = new DOMParser().parseFromString(text, 'text/html')
+  let item = template.querySelector(selector).innerHTML
+  return item
+}
+
+export const addRow = async obj => {
+  let template = await getTemplate('#table-template__body');
+  for(let [key, val] of Object.entries(obj)){
+    template = template.replace('{'+key+'}', val)
+  }
+  return template;
 }
 
 const getUrl = (page) => {
@@ -36,50 +41,52 @@ const getData = async (url) => {
 }
 
 const generateTableBody = async () => {
-  let $tableBody = $('#tableBody');
+  let $tableBody = $('#table__body');
   let data = await getData(getUrl(page));
-	clean($tableBody)
-  data.data.forEach(el => {
-    $tableBody.innerHTML += addRow(el);
-  });
+  var bodyContent = ""
+
+  for(let el of data.data){
+    bodyContent += await addRow(el);
+  }
+  $tableBody.innerHTML = bodyContent;
 }
 
 const generateTableFooter = () => {
-	let $tableFooter = $('#tableFooter');
-	let prevButton = document.createElement('button');
-	prevButton.setAttribute('id', 'prevPage');
-	prevButton.innerHTML = '<'
-	let nextButton = document.createElement('button');
-	nextButton.setAttribute('id', 'nextPage');
-	nextButton.innerHTML = '>'
+  let $tableFooter = $('#table__footer');
+  let prevButton = document.createElement('button');
+  prevButton.setAttribute('id', 'prevPage');
+  prevButton.innerHTML = '<'
+  let nextButton = document.createElement('button');
+  nextButton.setAttribute('id', 'nextPage');
+  nextButton.innerHTML = '>'
 
-	$tableFooter.append(prevButton)
-	$tableFooter.append(nextButton)
+  $tableFooter.append(prevButton)
+  $tableFooter.append(nextButton)
 
   nextButton.addEventListener('click', async () => {
-  		let np = $('#nextPage')
+    let np = $('#nextPage')
     if(page >= 200){
       return
     }
     page+=1;
-  		np.innerHTML = ''
-  		setLoading(np);
+    np.innerHTML = ''
+    setLoading(np);
     await generateTableBody();
-  		setLoading(np, 'false');
-  		np.innerHTML = '>'
+    setLoading(np, 'false');
+    np.innerHTML = '>'
   })
-  
+
   prevButton.addEventListener('click', async () => {
-  		let pp = $('#prevPage')
+    let pp = $('#prevPage')
     if(page <= 1){
       return
     }
     page-=1;
-  		pp.innerHTML = ''
-  		setLoading(pp);
+    pp.innerHTML = ''
+    setLoading(pp);
     await generateTableBody();
-  		setLoading(pp, 'false');
-  		pp.innerHTML = '<'
+    setLoading(pp, 'false');
+    pp.innerHTML = '<'
   })
 }
 
@@ -87,19 +94,18 @@ const generateTable = async ($app) => {
   clean($app);
   setLoading($app);
 
-	let table = $('#table-template').content.querySelector('article')
+  let table = await getTemplate('#table-template')
 
-  $app.innerHTML = table.outerHTML;
-	$('#card').style.display = 'none';
+  $app.innerHTML = table;
+  $('#card').style.display = 'none';
 
   await generateTableBody();
   setLoading($app, 'false');
-	$('#card').style.display = '';
+  $('#card').style.display = '';
 
-	generateTableFooter()
+  generateTableFooter()
 }
 
 export const main = async ($app) => {
-	await generateTable($app)
-
+  await generateTable($app)
 }
